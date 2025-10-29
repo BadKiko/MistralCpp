@@ -18,7 +18,7 @@ int main(int argc, char *argv[])
     });
 
     QTimer::singleShot(0, [&api](){
-        QList<std::shared_ptr<MessageBase>> messages = {std::make_shared<TextMessage>("penis", "user")};
+        QList<std::shared_ptr<MessageBase>> messages = {std::make_shared<TextMessage>("Send HI!", "user")};
 
         api.chat(messages);
     });

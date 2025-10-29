@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(MistralCpp LANGUAGES CXX)
+project(MistralCppLib LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -13,23 +13,35 @@ find_package(Qt6 REQUIRED COMPONENTS Core Network)
 # --------------------------
 # 1. Библиотека MistralCpp
 # --------------------------
-add_library(MistralCppLib SHARED
-    mistralcpp.cpp
-    mistralcpp.h
-    MistralCpp_global.h
+
+include_directories(include)
+
+set(HEADER_LIB
+    include/mistralcpp.h
 )
 
-target_link_libraries(MistralCppLib
-    PRIVATE Qt6::Core Qt6::Network
+set(SOURCE_LIB
+    src/mistralcpp.cpp
 )
 
-target_compile_definitions(MistralCppLib PRIVATE MISTRALCPP_LIBRARY)
+add_library(${PROJECT_NAME} SHARED 
+    ${HEADER_LIB}
+    ${SOURCE_LIB}
+)
+
+target_link_libraries(${PROJECT_NAME}
+    PRIVATE 
+        Qt6::Core 
+        Qt6::Network
+)
+
+target_compile_definitions(${PROJECT_NAME} PRIVATE MISTRALCPP_LIBRARY)
 
 # --------------------------
 # 2. Исполняемый файл для теста
 # --------------------------
-add_executable(MistralCppTest main.cpp)
+add_executable(MistralCppTest src/main.cpp)
 
 target_link_libraries(MistralCppTest
-    PRIVATE Qt6::Core Qt6::Network MistralCppLib
+    PRIVATE Qt6::Core Qt6::Network ${PROJECT_NAME}
 )

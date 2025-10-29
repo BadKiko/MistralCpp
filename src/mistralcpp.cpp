@@ -1,18 +1,33 @@
 #include "mistralcpp.h"
-#include <QNetworkAccessManager>
-#include <QNetworkRequest>
-#include <QNetworkReply>
-#include <QJsonDocument>
-#include <QJsonObject>
-#include <QJsonArray>
-#include <QDebug>
 
-QString MultiModalMessage::getContent(){
-    return "penis";
+/* Constructor */
+MessageBase::MessageBase(QString mRole) : role(mRole) {}
+
+TextMessage::TextMessage(QString content, QString mRole) : MessageBase(mRole), mContent(content) {}
+
+MultiModalMessage::MultiModalMessage(Part content, QString mRole) : MessageBase(mRole) {
+    mContent = {content};
 }
 
-QString TextMessage:: getContent(){
-    return "penis2";
+/*  Method */
+QString MessageBase::getRole() {
+    return this->role;
+}
+
+QString MultiModalMessage::getContent(){
+    QStringList contentList;
+    for (const auto& part : mContent) {
+        if (part.type == Part::Type::Text) {
+            contentList.append(part.text);
+        } else if (part.type == Part::Type::ImageUrl) {
+            contentList.append(part.imageUrl);
+        }
+    }
+    return contentList.join(", ");
+}
+
+QString TextMessage::getContent(){
+    return mContent;
 }
 
 MistralApi::MistralApi(const QString &mistralUrl, const QString &mistralToken, const QString &model, QObject *parent)
@@ -42,7 +57,7 @@ void MistralApi::chat(const QList<std::shared_ptr<MessageBase>> messages)
 
     for (std::shared_ptr <MessageBase> message : chatHistory) {
         QJsonObject sysMsg;
-        sysMsg["role"] = message->role;
+        sysMsg["role"] = message->getRole();
         sysMsg["content"] = message->getContent();
         qJsonMessages.append(sysMsg);
     }

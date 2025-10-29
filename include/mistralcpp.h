@@ -9,18 +9,19 @@
 
 class MessageBase {
     public:
-        QString role;
-        MessageBase(QString mRole){role = mRole;}
-        virtual QString getContent();
+        MessageBase(QString mRole);
+        virtual QString getContent() = 0;
+        virtual QString getRole();
         virtual ~MessageBase() = default;
+    
+    private:
+        QString role;
 };
 
 class TextMessage : public MessageBase {
     public:
+        TextMessage(QString content, QString mRole);    
         QString getContent() override;
-        TextMessage(QString content, QString mRole) : MessageBase(mRole){
-            mContent = content;
-        }
 
     private:
         QString mContent;
@@ -28,20 +29,18 @@ class TextMessage : public MessageBase {
 };
 
 class MultiModalMessage : public MessageBase {
-    struct Part {
-        enum class Type { Text, ImageUrl } type;
-        QString text;
-        QString imageUrl;
-    };
-
+    
     public:
+        struct Part {
+            enum class Type { Text, ImageUrl } type;
+            QString text;
+            QString imageUrl;
+        };
+        MultiModalMessage(Part content, QString mRole);
         QString getContent() override;
-        MultiModalMessage(Part content, QString mRole) : MessageBase(mRole){
-            content = {content};
-        }
 
     private:
-        QList<Part> content;
+        QList<Part> mContent;
 
 };
 
