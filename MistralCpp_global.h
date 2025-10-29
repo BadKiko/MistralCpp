@@ -1,0 +1,12 @@
+#ifndef MISTRALCPP_GLOBAL_H
+#define MISTRALCPP_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(MISTRALCPP_LIBRARY)
+#define MISTRALCPP_EXPORT Q_DECL_EXPORT
+#else
+#define MISTRALCPP_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // MISTRALCPP_GLOBAL_H
