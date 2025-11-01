@@ -46,6 +46,8 @@ class MultiModalMessage : public MessageBase {
                     }
                 }
 
+                Value getValue() const {return value;}
+
             private:
                 Value value;
             };

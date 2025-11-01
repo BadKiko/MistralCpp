@@ -10,16 +10,21 @@ MultiModalMessage::MultiModalMessage(QList<Part> content, QString mRole) : Messa
 QJsonObject MultiModalMessage::toJson(){
     QJsonArray jsonArr;
 
-    for(const MultiModalMessage::Part mPart : std::as_const(mContent)){
+    for(const MultiModalMessage::Part &mPart : std::as_const(mContent)){
         QJsonObject obj;
         MistralUtils utils;
         obj["type"] = mPart.type.toString();
 
-        if(!mPart.text.isNull()){
+        if(mPart.type.getValue() == MultiModalMessage::Part::Type::Text){
             obj["text"] = mPart.text;
         }
-        else if(!mPart.image.isNull()){
-            obj["image_url"] = MistralUtils().qImageToBase64(mPart.image);
+        else if(mPart.type.getValue() == MultiModalMessage::Part::Type::ImageUrl){
+            if(!mPart.text.isNull()){
+                obj["image_url"] = mPart.text;
+            }
+            else{
+                obj["image_url"] = "data:image/jpeg;base64,"+MistralUtils().qImageToBase64(mPart.image);
+            }
         }
 
         jsonArr.append(obj);
@@ -85,11 +90,14 @@ void MistralApi::chat(const QList<std::shared_ptr<MessageBase>> messages)
 
     // Асинхронная обработка ответа
     connect(reply, &QNetworkReply::finished, this, [this, reply]() {
+        QByteArray resp = reply->readAll();
         if (reply->error() == QNetworkReply::NoError) {
-            QByteArray resp = reply->readAll();
             emit responseReady(QString::fromUtf8(resp));
         } else {
-            emit errorOccurred(reply->errorString());
+            // Выводим текст ответа (если есть) + код ошибки
+            QString errMsg = reply->errorString();
+            QString respBody = QString::fromUtf8(resp);
+            emit errorOccurred(QString("HTTP %1: %2").arg(reply->attribute(QNetworkRequest::HttpStatusCodeAttribute).toInt()).arg(respBody.isEmpty() ? errMsg : respBody));
         }
         reply->deleteLater();
     });
