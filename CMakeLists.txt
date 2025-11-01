@@ -8,7 +8,7 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Network Gui)
 
 # --------------------------
 # 1. Библиотека MistralCpp
@@ -18,10 +18,12 @@ include_directories(include)
 
 set(HEADER_LIB
     include/mistralcpp.h
+    src/utils/mistralutils.h
 )
 
 set(SOURCE_LIB
     src/mistralcpp.cpp
+    src/utils/mistralutils.cpp
 )
 
 add_library(${PROJECT_NAME} SHARED 
@@ -33,6 +35,7 @@ target_link_libraries(${PROJECT_NAME}
     PRIVATE 
         Qt6::Core 
         Qt6::Network
+        Qt6::Gui
 )
 
 target_compile_definitions(${PROJECT_NAME} PRIVATE MISTRALCPP_LIBRARY)
@@ -43,5 +46,5 @@ target_compile_definitions(${PROJECT_NAME} PRIVATE MISTRALCPP_LIBRARY)
 add_executable(MistralCppTest src/main.cpp)
 
 target_link_libraries(MistralCppTest
-    PRIVATE Qt6::Core Qt6::Network ${PROJECT_NAME}
+    PRIVATE Qt6::Core Qt6::Network Qt6::Gui ${PROJECT_NAME}
 )

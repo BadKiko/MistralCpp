@@ -1,34 +1,47 @@
 #include "mistralcpp.h"
-
+#include "utils/mistralutils.h"
+#include "QDebug"
 /* Constructor */
-MessageBase::MessageBase(QString mRole) : role(mRole) {}
+MessageBase::MessageBase(QString role) : mRole(role) {}
 
-TextMessage::TextMessage(QString content, QString mRole) : MessageBase(mRole), mContent(content) {}
+TextMessage::TextMessage(QString content, QString role) : MessageBase(role), mContent(content) {}
 
-MultiModalMessage::MultiModalMessage(Part content, QString mRole) : MessageBase(mRole) {
-    mContent = {content};
-}
+MultiModalMessage::MultiModalMessage(QList<Part> content, QString mRole) : MessageBase(mRole), mContent(content) {}
+QJsonObject MultiModalMessage::toJson(){
+    QJsonArray jsonArr;
 
-/*  Method */
-QString MessageBase::getRole() {
-    return this->role;
-}
+    for(const MultiModalMessage::Part mPart : std::as_const(mContent)){
+        QJsonObject obj;
+        MistralUtils utils;
+        obj["type"] = mPart.type.toString();
 
-QString MultiModalMessage::getContent(){
-    QStringList contentList;
-    for (const auto& part : mContent) {
-        if (part.type == Part::Type::Text) {
-            contentList.append(part.text);
-        } else if (part.type == Part::Type::ImageUrl) {
-            contentList.append(part.imageUrl);
+        if(!mPart.text.isNull()){
+            obj["text"] = mPart.text;
         }
+        else if(!mPart.image.isNull()){
+            obj["image_url"] = MistralUtils().qImageToBase64(mPart.image);
+        }
+
+        jsonArr.append(obj);
     }
-    return contentList.join(", ");
+
+    QJsonObject obj;
+    obj["role"] = mRole;
+    obj["content"] = jsonArr;
+
+    return obj;
 }
 
-QString TextMessage::getContent(){
-    return mContent;
+QJsonObject TextMessage::toJson(){
+    QJsonObject obj;
+    obj["role"] = mRole;
+    obj["content"] = mContent;
+
+    return obj;
 }
+
+
+
 
 MistralApi::MistralApi(const QString &mistralUrl, const QString &mistralToken, const QString &model, QObject *parent)
     : QObject(parent), rMistralUrl(mistralUrl), rMistralToken(mistralToken), rMistralModel(model)
@@ -55,16 +68,16 @@ void MistralApi::chat(const QList<std::shared_ptr<MessageBase>> messages)
 
     QJsonArray qJsonMessages;
 
-    for (std::shared_ptr <MessageBase> message : chatHistory) {
-        QJsonObject sysMsg;
-        sysMsg["role"] = message->getRole();
-        sysMsg["content"] = message->getContent();
-        qJsonMessages.append(sysMsg);
+    for (std::shared_ptr <MessageBase> message : std::as_const(chatHistory)) {
+        qJsonMessages.append(message->toJson());
     }
 
     json["messages"] = qJsonMessages;
 
     QJsonDocument doc(json);
+
+    qDebug() << doc.toJson();
+
     QByteArray data = doc.toJson();
 
     // Отправка POST-запроса

@@ -7,7 +7,7 @@ int main(int argc, char *argv[])
 {
     QCoreApplication app(argc, argv);
 
-    MistralApi api("https://api.mistral.ai/v1", "hDXuWc3NksmZEHGQ7McNnQJOz2ptg06k", "ministral-3b-2410");
+    MistralApi api("https://api.mistral.ai/v1", "hDXuWc3NksmZEHGQ7McNnQJOz2ptg06k", "pixtral-large-2411");
 
     QObject::connect(&api, &MistralApi::responseReady, [](const QString &response){
         qDebug() << "Ответ:" << response;
@@ -18,7 +18,8 @@ int main(int argc, char *argv[])
     });
 
     QTimer::singleShot(0, [&api](){
-        QList<std::shared_ptr<MessageBase>> messages = {std::make_shared<TextMessage>("Send HI!", "user")};
+        QList<MultiModalMessage::Part> messagesParts = {{MultiModalMessage::Part::Type::Value::Text, "Test"}, {MultiModalMessage::Part::Type::Value::ImageUrl, "lksdfsfkdsol"}};
+        QList<std::shared_ptr<MessageBase>> messages = {std::make_shared<MultiModalMessage>(messagesParts, "user")};
 
         api.chat(messages);
     });

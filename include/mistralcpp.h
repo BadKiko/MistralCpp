@@ -6,22 +6,22 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QDebug>
+#include <QImage>
+#include <QBuffer>
 
 class MessageBase {
     public:
         MessageBase(QString mRole);
-        virtual QString getContent() = 0;
-        virtual QString getRole();
+        virtual QJsonObject toJson() = 0;
         virtual ~MessageBase() = default;
-    
-    private:
-        QString role;
+
+        QString mRole;
 };
 
 class TextMessage : public MessageBase {
     public:
-        TextMessage(QString content, QString mRole);    
-        QString getContent() override;
+        TextMessage(QString content, QString role);
+        QJsonObject toJson() override;
 
     private:
         QString mContent;
@@ -32,12 +32,31 @@ class MultiModalMessage : public MessageBase {
     
     public:
         struct Part {
-            enum class Type { Text, ImageUrl } type;
+            class Type {
+            public:
+                enum Value { Text, ImageUrl };
+
+                Type(Value v) : value(v) {}
+
+                QString toString() const {
+                    switch (value) {
+                    case Text: return "text";
+                    case ImageUrl: return "image_url";
+                    default: return "unknown";
+                    }
+                }
+
+            private:
+                Value value;
+            };
+
+
+            Type type;
             QString text;
-            QString imageUrl;
+            QImage image;
         };
-        MultiModalMessage(Part content, QString mRole);
-        QString getContent() override;
+        MultiModalMessage(QList<Part> content, QString role);
+        QJsonObject toJson() override;
 
     private:
         QList<Part> mContent;
